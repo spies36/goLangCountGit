@@ -18,15 +18,12 @@ func main() {
 
 	var cwd string
 	var err error
-	var folderCount int
 	var folders []fs.DirEntry
 	var parentChannel = childChannel{
 		repoCount:   make(chan int, 1),
 		foundString: make(chan string, 1),
 	}
 
-	//Set path to parent directory
-	os.Chdir("./")
 	cwd, err = os.Getwd()
 
 	if err != nil {
@@ -37,7 +34,7 @@ func main() {
 	fmt.Printf("Beginning search from path: %v \n", cwd)
 	startTime := time.Now()
 
-	folderCount, folders, err = findAndCountDirs()
+	folders, err = findAndCountRootDirs()
 
 	if err != nil {
 		fmt.Print(err.Error())
@@ -46,19 +43,16 @@ func main() {
 
 	go countGitRepos(folders, cwd, parentChannel)
 
-	fmt.Printf("%d folders in %v \n", folderCount, cwd)
 	fmt.Printf("%v", <-parentChannel.foundString)
 	fmt.Printf("Found %d git repos in %f seconds \n", <-parentChannel.repoCount, time.Since(startTime).Seconds())
 }
 
 // Count all of the directories and return them
-func findAndCountDirs() (dirCount int, folders []fs.DirEntry, err error) {
+func findAndCountRootDirs() (folders []fs.DirEntry, err error) {
 	folders, err = os.ReadDir("./")
 	if err != nil {
 		return
 	}
-
-	dirCount = len(folders)
 	return
 }
 
